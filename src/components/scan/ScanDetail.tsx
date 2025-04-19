@@ -332,7 +332,16 @@ export function ScanDetail({ scanId, onBack }: ScanDetailProps) {
 
   // Update handleGenerateReport function
   const handleGenerateReport = async () => {
-    if (!result || isGeneratingReport) return;
+    if (!result) {
+      addToast({
+        title: 'Error',
+        description: 'Please analyze the scan first before generating a report.',
+        type: 'warning'
+      });
+      return;
+    }
+    
+    if (isGeneratingReport) return;
     
     try {
       setIsGeneratingReport(true);
@@ -445,33 +454,57 @@ export function ScanDetail({ scanId, onBack }: ScanDetailProps) {
         </div>
       </div>
       
-      {/* Add manual tab buttons for debugging */}
+      {/* Tab Navigation */}
       <div className="bg-muted/30 p-2 rounded flex flex-wrap gap-2 items-center">
-        <span className="text-sm text-muted-foreground">Manual tab switcher:</span>
         <Button 
           size="sm" 
           variant={activeTab === "image" ? "default" : "outline"} 
           onClick={() => handleTabChange("image")}
         >
+          <Layers className="h-4 w-4 mr-2" />
           Image
         </Button>
         <Button 
           size="sm" 
           variant={activeTab === "ai-analysis" ? "default" : "outline"} 
           onClick={() => handleTabChange("ai-analysis")}
-          disabled={!result}
+          disabled={!result || scan.status === 'uploaded'}
         >
+          <Brain className="h-4 w-4 mr-2" />
           AI Analysis
+          {!result && <span className="ml-2 text-xs">(Analyze First)</span>}
         </Button>
         <Button 
           size="sm" 
           variant={activeTab === "report" ? "default" : "outline"} 
           onClick={() => handleTabChange("report")}
-          disabled={!report}
         >
+          <FileHeart className="h-4 w-4 mr-2" />
           Report
+          {!report && result && <span className="ml-2 text-xs">(Report Preview)</span>}
         </Button>
-        <span className="text-xs text-muted-foreground ml-auto">Current tab: {activeTab}</span>
+        {!result && scan.status === 'uploaded' && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleAnalyze}
+            disabled={loading}
+          >
+            <Bot className="h-4 w-4 mr-2" />
+            {loading ? 'Analyzing...' : 'Start Analysis'}
+          </Button>
+        )}
+        {result && !report && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleGenerateReport}
+            disabled={isGeneratingReport}
+          >
+            <FileHeart className="h-4 w-4 mr-2" />
+            {isGeneratingReport ? 'Generating...' : 'Generate Report'}
+          </Button>
+        )}
       </div>
       
       <div className="text-xs text-muted-foreground">
